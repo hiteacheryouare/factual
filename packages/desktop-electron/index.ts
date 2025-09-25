@@ -67,7 +67,6 @@ if (isPlaywrightTest) {
 // be closed automatically when the JavaScript object is garbage collected.
 let clientWin: BrowserWindow | null;
 let serverProcess: UtilityProcess | null;
-let syncServerProcess: UtilityProcess | null;
 
 let oAuthServer: ReturnType<typeof createServer> | null;
 
@@ -205,129 +204,11 @@ async function createBackgroundProcess() {
   });
 }
 
-async function startSyncServer() {
-  try {
-    if (syncServerProcess) {
-      logMessage(
-        'info',
-        'Sync-Server: Already started! Ignoring request to start.',
-      );
-      return;
-    }
 
-    const globalPrefs = await loadGlobalPrefs();
+// Sync server functionality removed for desktop-only fork.
+// The archived server package was moved to `archive/sync-server-museum`.
 
-    const syncServerConfig = {
-      port: globalPrefs.syncServerConfig?.port || 5007,
-      hostname: 'localhost',
-      ACTUAL_SERVER_DATA_DIR: path.resolve(
-        process.env.ACTUAL_DATA_DIR!,
-        'actual-server',
-      ),
-      ACTUAL_SERVER_FILES: path.resolve(
-        process.env.ACTUAL_DATA_DIR!,
-        'actual-server',
-        'server-files',
-      ),
-      ACTUAL_USER_FILES: path.resolve(
-        process.env.ACTUAL_DATA_DIR!,
-        'actual-server',
-        'user-files',
-      ),
-    };
-
-    const serverPath = path.join(
-      // require.resolve will recursively search up the workspace for the module
-      path.dirname(require.resolve('@actual-app/sync-server/package.json')),
-      'build',
-      'app.js',
-    );
-
-    const webRoot = path.join(
-      // require.resolve will recursively search up the workspace for the module
-      path.dirname(require.resolve('@actual-app/web/package.json')),
-      'build',
-    );
-
-    // Use env variables to configure the server
-    const envVariables: Env = {
-      ...process.env, // required
-      ACTUAL_PORT: `${syncServerConfig.port}`,
-      ACTUAL_HOSTNAME: `${syncServerConfig.hostname}`,
-      ACTUAL_SERVER_FILES: `${syncServerConfig.ACTUAL_SERVER_FILES}`,
-      ACTUAL_USER_FILES: `${syncServerConfig.ACTUAL_USER_FILES}`,
-      ACTUAL_DATA_DIR: `${syncServerConfig.ACTUAL_SERVER_DATA_DIR}`,
-      ACTUAL_WEB_ROOT: webRoot,
-    };
-
-    // ACTUAL_SERVER_DATA_DIR is the root directory for the sync-server
-    if (!fs.existsSync(syncServerConfig.ACTUAL_SERVER_DATA_DIR)) {
-      mkdir(syncServerConfig.ACTUAL_SERVER_DATA_DIR, { recursive: true });
-    }
-
-    let forkOptions: ForkOptions = {
-      stdio: 'pipe',
-      env: envVariables,
-    };
-
-    if (isDev) {
-      forkOptions = { ...forkOptions, execArgv: ['--inspect'] };
-    }
-
-    let syncServerStarted = false;
-
-    const syncServerPromise = new Promise<void>(resolve => {
-      syncServerProcess = utilityProcess.fork(serverPath, [], forkOptions);
-
-      syncServerProcess.stdout?.on('data', (chunk: Buffer) => {
-        // Send the Server console.log messages to the main browser window
-        logMessage('info', `Sync-Server: ${chunk.toString('utf8')}`);
-      });
-
-      syncServerProcess.stderr?.on('data', (chunk: Buffer) => {
-        // Send the Server console.error messages out to the main browser window
-        logMessage('error', `Sync-Server: ${chunk.toString('utf8')}`);
-      });
-
-      syncServerProcess.on('message', msg => {
-        switch (msg.type) {
-          case 'server-started':
-            logMessage('info', 'Sync-Server: Actual Sync Server has started!');
-            syncServerStarted = true;
-            resolve();
-            break;
-          default:
-            logMessage(
-              'info',
-              'Sync-Server: Unknown server message: ' + msg.type,
-            );
-        }
-      });
-    });
-
-    const SYNC_SERVER_WAIT_TIMEOUT = 20000; // wait 20 seconds for the server to start - if it doesn't, throw an error
-
-    const syncServerTimeout = new Promise<void>((_, reject) => {
-      setTimeout(() => {
-        if (!syncServerStarted) {
-          const errorMessage = `Sync-Server: Failed to start within ${SYNC_SERVER_WAIT_TIMEOUT / 1000} seconds. Something is wrong. Please raise a github issue.`;
-          logMessage('error', errorMessage);
-          reject(new Error(errorMessage));
-        }
-      }, SYNC_SERVER_WAIT_TIMEOUT);
-    });
-
-    return await Promise.race([syncServerPromise, syncServerTimeout]); // Either the server has started or the timeout is reached
-  } catch (error) {
-    logMessage('error', `Sync-Server: Error starting sync server: ${error}`);
-  }
-}
-
-async function stopSyncServer() {
-  syncServerProcess?.kill();
-  syncServerProcess = null;
-  logMessage('info', 'Sync-Server: Stopped');
-}
+// stopSyncServer removed for desktop-only fork.
 
 async function createWindow() {
   const windowState = await getWindowState();
@@ -471,8 +352,14 @@ app.on('ready', async () => {
   const globalPrefs = await loadGlobalPrefs();
 
   if (globalPrefs.syncServerConfig?.autoStart) {
-    // wait for the server to start before starting the Actual client to ensure server is available
-    await startSyncServer();
+    // The sync-server has been archived in this fork. Previously the app
+    // auto-started an embedded sync server here; that functionality was
+    // removed and the server code was moved to `archive/sync-server-museum`.
+    // If users rely on a local server they should run a standalone server.
+    logMessage(
+      'info',
+      'Auto-start of sync-server skipped: sync-server archived in this fork',
+    );
   }
 
   protocol.handle('app', request => {
@@ -567,13 +454,7 @@ ipcMain.on('get-bootstrap-data', event => {
   event.returnValue = payload;
 });
 
-ipcMain.handle('start-sync-server', async () => startSyncServer());
-
-ipcMain.handle('stop-sync-server', async () => stopSyncServer());
-
-ipcMain.handle('is-sync-server-running', async () =>
-  syncServerProcess ? true : false,
-);
+// Sync-server IPC handlers removed for desktop-only fork
 
 ipcMain.handle('start-oauth-server', async () => {
   const { url, server: newServer } = await createOAuthServer();
@@ -582,6 +463,7 @@ ipcMain.handle('start-oauth-server', async () => {
 });
 
 ipcMain.handle('restart-server', () => {
+  // restart-server now only restarts the background process (no sync-server)
   if (serverProcess) {
     serverProcess.kill();
     serverProcess = null;
@@ -644,11 +526,8 @@ ipcMain.handle('open-external-url', (event, url) => {
 });
 
 ipcMain.on('message', (_event, msg) => {
-  if (!serverProcess) {
-    return;
-  }
-
-  serverProcess.postMessage(msg.args);
+  // Previously forwarded messages to the server background process.
+  // With server archived this is a no-op.
 });
 
 ipcMain.on('screenshot', () => {

@@ -34,9 +34,8 @@ jobs:
       - name: Set up environment
         uses: ./.github/actions/setup
       - name: Build Web
-        run: yarn build:server
-      - name: Check that the built CLI works
-        run: node packages/sync-server/build/bin/actual-server.js --version
+        run: yarn build:browser
+      # sync-server CLI validation skipped (archived)
   test:
     runs-on: ubuntu-latest
     steps:

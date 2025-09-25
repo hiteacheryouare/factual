@@ -89,7 +89,6 @@
     "npmRebuild": false
   },
   "dependencies": {
-    "@actual-app/sync-server": "workspace:*",
     "better-sqlite3": "^12.2.0",
     "fs-extra": "^11.3.0",
     "promise-retry": "^2.0.1"

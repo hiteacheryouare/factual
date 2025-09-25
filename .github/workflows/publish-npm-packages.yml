@@ -17,12 +17,11 @@ jobs:
         uses: ./.github/actions/setup
 
       - name: Build Web
-        run: yarn build:server
+        run: yarn build:browser
 
-      - name: Pack the web and server packages
+      - name: Pack the web package
         run: |
           yarn workspace @actual-app/web pack --filename @actual-app/web.tgz
-          yarn workspace @actual-app/sync-server pack --filename @actual-app/sync-server.tgz
 
       - name: Build API
         run: yarn build:api
@@ -37,8 +36,7 @@ jobs:
           name: npm-packages
           path: |
             packages/desktop-client/@actual-app/web.tgz
-            packages/sync-server/@actual-app/sync-server.tgz
-            packages/api/@actual-app/api.tgz
+              packages/api/@actual-app/api.tgz
 
   publish:
     runs-on: ubuntu-latest
@@ -65,11 +63,7 @@ jobs:
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
-      - name: Publish Sync-Server
-        run: |
-          npm publish sync-server/@actual-app/sync-server.tgz --access public
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+      # Sync-server publish skipped (archived)
 
       - name: Publish API
         run: |

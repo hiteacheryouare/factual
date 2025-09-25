@@ -85,8 +85,26 @@ export function ElectronServerConfig({
         }),
       ).unwrap();
 
-      await window.globalThis.Actual.stopSyncServer();
-      await window.globalThis.Actual.startSyncServer();
+      // Sync-server has been archived in this fork. The old APIs to start
+      // and stop the embedded server are no-ops. We still save the prefs and
+      // set the server URL to localhost to preserve UX for users running an
+      // external or standalone server.
+      // Call stop/start only if available, but don't await them because
+      // they are no-ops in the desktop-only fork and awaiting can block the UI.
+      try {
+        if (window.globalThis.Actual?.stopSyncServer) {
+          void window.globalThis.Actual.stopSyncServer();
+        }
+      } catch (e) {
+        // ignore
+      }
+      try {
+        if (window.globalThis.Actual?.startSyncServer) {
+          void window.globalThis.Actual.startSyncServer();
+        }
+      } catch (e) {
+        // ignore
+      }
       setStartingSyncServer(false);
       initElectronSyncServerRunningStatus();
       await setServerUrl(`http://localhost:${electronServerPort}`);
@@ -102,9 +120,11 @@ export function ElectronServerConfig({
     useState(false);
 
   const initElectronSyncServerRunningStatus = async () => {
-    setElectronSyncServerRunning(
-      await window.globalThis.Actual.isSyncServerRunning(),
-    );
+    // The desktop fork doesn't run an embedded sync-server. Treat the
+    // server as not running by default. If a standalone server is running
+    // on localhost the UX will continue to work after the user sets the URL.
+    // Desktop fork treats embedded server as not running by default.
+    setElectronSyncServerRunning(false);
   };
 
   useEffect(() => {
@@ -114,8 +134,9 @@ export function ElectronServerConfig({
   async function dontUseSyncServer() {
     setSyncServerConfig(null);
 
-    if (electronSyncServerRunning) {
-      await window.globalThis.Actual.stopSyncServer();
+    if (electronSyncServerRunning && window.globalThis.Actual?.stopSyncServer) {
+      // best-effort stop; don't await
+      void window.globalThis.Actual.stopSyncServer();
     }
 
     onDoNotUseServer();

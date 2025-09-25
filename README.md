@@ -4,6 +4,55 @@
 
 ## Getting Started
 
+## Desktop-only fork: run the app locally (no server)
+
+This fork is trimmed to be desktop-first. The sync server was archived to
+`archive/sync-server-museum` and is not required to run the desktop app.
+
+Quick start (macOS / Linux):
+
+1. Clone the repo:
+
+```bash
+git clone https://github.com/<your-user>/factual.git
+cd factual
+```
+
+2. Install Yarn 4 (Berry) if you don't have it and bootstrap the workspace:
+
+```bash
+# Install Yarn (if needed)
+npm install -g yarn
+# From repo root
+yarn
+```
+
+3. Start the desktop app in development (this builds the core lib and runs
+   the Electron app):
+
+```bash
+yarn start:desktop
+```
+
+Notes and troubleshooting:
+
+- The archived sync server is preserved in `archive/sync-server-museum` for
+  historical reference. It is not part of the active workspace and does not
+  need to be built or run for the desktop app to work.
+- If you want a completely clean lockfile without any archived workspace
+  references, run `yarn` locally to regenerate `yarn.lock` after moving the
+  server out of `packages/` (this repo already stores the server under
+  `archive/` so your local `yarn` run will remove workspace resolutions
+  referring to it).
+- If `yarn start:desktop` fails due to missing native deps or Electron
+  rebuilds, run `yarn rebuild-electron` and try again.
+- To run the packaged desktop release, use `yarn package-electron` (see
+  `bin/package-electron` for details); packaging no longer builds the
+  archived sync-server.
+
+If you want, I can also add a minimal CONTRIBUTING-DESKTOP.md with a
+small checklist for contributors working on the desktop-only experience.
+
 Actual is a local-first personal finance tool. It is 100% free and open-source, written in NodeJS, it has a synchronization element so that all your changes can move between devices without any heavy lifting.
 
 If you are interested in contributing, or want to know how development works, see our [contributing](https://actualbudget.org/docs/contributing/) document we would love to have you.
@@ -54,6 +103,7 @@ The Actual app is split up into a few packages:
 - loot-core - The core application that runs on any platform
 - desktop-client - The desktop UI
 - desktop-electron - The desktop app
+- sync-server - (archived in this fork) the sync server has been moved to `archive/sync-server-museum` and is not part of the desktop-only build
 
 More information on the project structure is available in our [community documentation](https://actualbudget.org/docs/contributing/project-details).
 

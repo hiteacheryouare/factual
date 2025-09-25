@@ -29,11 +29,7 @@ contextBridge.exposeInMainWorld('Actual', {
     });
   },
 
-  startSyncServer: () => ipcRenderer.invoke('start-sync-server'),
-
-  stopSyncServer: () => ipcRenderer.invoke('stop-sync-server'),
-
-  isSyncServerRunning: () => ipcRenderer.invoke('is-sync-server-running'),
+  // Sync-server control removed in desktop-only fork
 
   startOAuthServer: () => ipcRenderer.invoke('start-oauth-server'),
 
@@ -78,6 +74,7 @@ contextBridge.exposeInMainWorld('Actual', {
   waitForUpdateReadyForDownload: () => new Promise<void>(() => {}),
 
   getServerSocket: async () => {
+    // Server socket not available in desktop-only fork
     return null;
   },
 

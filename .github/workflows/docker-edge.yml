@@ -2,11 +2,7 @@ name: Build Edge Docker Image
 
 # Edge Docker images are built for every commit, and daily
 on:
-  push:
-    branches:
-      - master
-    paths:
-      - 'packages/sync-server/**'
+  # Server docker-edge workflow disabled in desktop-only fork
   pull_request:
     branches:
       - master
@@ -75,35 +71,4 @@ jobs:
 
       # Building outside of the docker image allows us to build once and push to multiple platforms
       # This is faster and avoids yarn memory issues
-      - name: Set up environment
-        uses: ./.github/actions/setup
-      - name: Build Web
-        run: yarn build:server
-
-      - name: Build image for testing
-        uses: docker/build-push-action@v5
-        with:
-          context: .
-          push: false
-          load: true
-          file: packages/sync-server/docker/${{ matrix.os }}.Dockerfile
-          tags: actualbudget/actual-server-testing
-
-      - name: Test that the docker image boots
-        run: |
-          docker run --detach --network=host actualbudget/actual-server-testing
-          sleep 5
-          curl --fail -sS -LI -w '%{http_code}\n' --retry 10 --retry-delay 1 --retry-connrefused localhost:5006
-
-      # This will use the cache from the earlier build step and not rebuild the image
-      # https://docs.docker.com/build/ci/github-actions/test-before-push/
-      - name: Build and push images
-        uses: docker/build-push-action@v5
-        with:
-          context: .
-          push: ${{ github.event_name != 'pull_request' }}
-          file: packages/sync-server/docker/${{ matrix.os }}.Dockerfile
-          platforms: linux/amd64,linux/arm64,linux/arm/v7${{ matrix.os == 'alpine' && ',linux/arm/v6' || '' }}
-          tags: ${{ steps.meta.outputs.tags }}
-          build-args: |
-            GITHUB_TOKEN=${{ secrets.GITHUB_TOKEN }}
+      # image build steps removed for this fork

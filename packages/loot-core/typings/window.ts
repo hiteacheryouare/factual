@@ -38,9 +38,10 @@ type Actual = {
   ) => void;
   isUpdateReadyForDownload: () => boolean;
   waitForUpdateReadyForDownload: () => Promise<void>;
-  startSyncServer: () => Promise<void>;
-  stopSyncServer: () => Promise<void>;
-  isSyncServerRunning: () => Promise<boolean>;
+  // Sync-server control is optional in the desktop-only fork
+  startSyncServer?: () => Promise<void>;
+  stopSyncServer?: () => Promise<void>;
+  isSyncServerRunning?: () => Promise<boolean>;
   startOAuthServer: () => Promise<string>;
 };
 

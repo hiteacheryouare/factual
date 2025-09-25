@@ -97,7 +97,7 @@ export default pluginTypescript.config(
       'packages/loot-core/**/node_modules/*',
       'packages/loot-core/**/lib-dist/*',
       'packages/loot-core/**/proto/*',
-      'packages/sync-server/build/',
+  // sync-server archived
       '.yarn/*',
       '.github/*',
     ],
@@ -105,8 +105,7 @@ export default pluginTypescript.config(
   {
     // Temporary until the sync-server is migrated to TypeScript
     files: [
-      'packages/sync-server/**/*.spec.{js,jsx}',
-      'packages/sync-server/**/*.test.{js,jsx}',
+      // sync-server archived
     ],
     languageOptions: {
       globals: {
@@ -790,19 +789,5 @@ export default pluginTypescript.config(
       '@typescript-eslint/consistent-type-definitions': ['warn', 'type'],
     },
   },
-  {
-    files: ['packages/sync-server/**/*'],
-    // TODO: fix the issues in these files
-    rules: {
-      'import/extensions': 'off',
-      'actual/typography': 'off',
-    },
-  },
-  {
-    files: ['packages/sync-server/src/app-gocardless/banks/*.js'],
-    rules: {
-      'import/no-anonymous-default-export': 'off',
-      'import/no-default-export': 'off',
-    },
-  },
+  // sync-server files are archived and excluded from linting in this fork
 );

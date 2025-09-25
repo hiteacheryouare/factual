@@ -72,25 +72,5 @@ jobs:
 
       # Building outside of the docker image allows us to build once and push to multiple platforms
       # This is faster and avoids yarn memory issues
-      - name: Set up environment
-        uses: ./.github/actions/setup
-      - name: Build Web
-        run: yarn build:server
-
-      - name: Build and push ubuntu image
-        uses: docker/build-push-action@v5
-        with:
-          context: .
-          push: true
-          file: packages/sync-server/docker/ubuntu.Dockerfile
-          platforms: linux/amd64,linux/arm64,linux/arm/v7
-          tags: ${{ steps.meta.outputs.tags }}
-
-      - name: Build and push alpine image
-        uses: docker/build-push-action@v5
-        with:
-          context: .
-          push: true
-          file: packages/sync-server/docker/alpine.Dockerfile
-          platforms: linux/amd64,linux/arm64,linux/arm/v7,linux/arm/v6
-          tags: ${{ steps.alpine-meta.outputs.tags }}
+      # Server docker image build/push removed for desktop-only fork. The server
+      # has been archived to `archive/sync-server-museum` and is no longer built.
